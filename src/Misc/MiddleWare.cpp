@@ -57,6 +57,11 @@
 #include <err.h>
 #endif
 
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
+
 namespace zyn {
 
 using std::string;
@@ -1629,7 +1634,17 @@ MiddleWareImpl::MiddleWareImpl(MiddleWare *mw, SYNTH_T synth_,
 
     //Setup starting time
     struct timespec time;
-    clock_gettime(CLOCK_MONOTONIC, &time);
+#ifdef __MACH__ // OS X does not have clock_gettime, use clock_get_time
+  clock_serv_t cclock;
+  mach_timespec_t mts;
+  host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+  clock_get_time(cclock, &mts);
+  mach_port_deallocate(mach_task_self(), cclock);
+  time.tv_sec = mts.tv_sec;
+  time.tv_nsec = mts.tv_nsec;
+#else
+  clock_gettime(CLOCK_MONOTONIC, time);
+#endif
     start_time_sec  = time.tv_sec;
     start_time_nsec = time.tv_nsec;
 
@@ -1724,7 +1739,17 @@ void MiddleWareImpl::heartBeat(Master *master)
     //Current offline status
     
     struct timespec time;
-    clock_gettime(CLOCK_MONOTONIC, &time);
+#ifdef __MACH__ // OS X does not have clock_gettime, use clock_get_time
+  clock_serv_t cclock;
+  mach_timespec_t mts;
+  host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+  clock_get_time(cclock, &mts);
+  mach_port_deallocate(mach_task_self(), cclock);
+  time.tv_sec = mts.tv_sec;
+  time.tv_nsec = mts.tv_nsec;
+#else
+  clock_gettime(CLOCK_MONOTONIC, time);
+#endif
     uint32_t now = (time.tv_sec-start_time_sec)*100 +
                    (time.tv_nsec-start_time_nsec)*1e-9*100;
     int32_t last_ack   = master->last_ack;

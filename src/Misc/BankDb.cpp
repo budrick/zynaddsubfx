@@ -235,6 +235,9 @@ BankEntry BankDb::processXiz(std::string filename,
 
     //gah windows, just implement the darn standard APIs
 #ifndef WIN32
+    #ifdef __APPLE__
+    #define st_mtim st_mtimespec
+    #endif
     int ret  = lstat(fname.c_str(), &st);
     if(ret != -1)
         time = st.st_mtim.tv_sec;

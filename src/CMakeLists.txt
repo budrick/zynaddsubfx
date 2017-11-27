@@ -478,7 +478,9 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
             "-static" iphlpapi
             "-static" winpthread)
 else()
-    set(PLATFORM_LIBRARIES rt)
+    if (NOT APPLE)
+        set(PLATFORM_LIBRARIES rt)
+    endif()
     set(PTHREAD_LIBRARY pthread)
 endif()
 
